@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}
+    Технологии
+{% endblock %}
+{% load static %}
+{% block content %}
+  <section class="bg-light py-5 py-xl-8 py-xxl-18">
+    <div class="container overflow-hidden">
+      <div class="row gy-5 gy-lg-0 align-items-lg-center justify-content-lg-between">
+        <div class="col-12 col-lg-6 order-1 order-lg-0">
+          <h1 class="display-3 fw-bold mb-3 align-center">
+            Технологии
+          </h1>
+          <ul class="fs-4 mb-5">На данном этапе создания сайта
+            применены:
+            <li>Python</li>
+            <li>Django</li>
+            <li>Bootstrap</li>
+          </ul>
+          <div class="d-grid gap-2 d-sm-flex">
+            <button type="button"
+              class="btn btn-outline-primary btn-2xl rounded-pill px-4 gap-3">
+              <a href="{% url 'posts:index' %}">
+                На главную
+              </a>
+            </button>
+          </div>
+        </div>
+        <div class="col-12 col-lg-5 text-center">
+          <img class="img-fluid mask-position-center-center"
+            loading="lazy" src="{% static 'img/tech_ph.jpg' %}"
+            alt="">
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

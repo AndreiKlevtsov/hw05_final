@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Об авторе проекта
+{% endblock %}
+{% block content %}
+  <section class="bsb-author-1 bg-light py-5 py-xl-8 bsb-hover-special-x">
+    <div class="container overflow-hidden">
+      <div class="row justify-content-center gy-4 gy-md-0">
+        <div class="col-12 col-md-3 col-xl-2 d-flex align-items-center justify-content-center">
+          <img class="img-fluid w-150px h-150px rounded-circle bsb-hover-special-push-x"
+            loading="lazy"
+            src="{% static 'img/author_image.jpg' %}"
+            alt="">
+        </div>
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5 d-flex align-items-center justify-content-center">
+          <div class="text-center text-md-start bsb-hover-special-pull-x">
+            <h3 class="text-secondary fs-7">
+              Klevtsov Andrey
+            </h3>
+            <h2 class="fs-2 mb-3">
+              Об авторе(in process)
+            </h2>
+            <p class="mb-3">
+              Во время работы мне помогал кот, лежал
+              рядом и мурчал.
+            </p>
+            <p class="mb-0">
+              <a href="https://github.com/AndreiKlevtsov"
+                class="link-dark text-decoration-none">
+                GitHub
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  width="16" height="16" fill="currentColor"
+                  class="bi bi-arrow-bar-right"
+                  viewBox="0 0 16 16">
+                  <path fill-rule="evenodd"
+                    d="M6 8a.5.5 0 0 0 .5.5h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L12.293 7.5H6.5A.5.5 0 0 0 6 8Zm-2.5 7a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5Z"/>
+                </svg>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
