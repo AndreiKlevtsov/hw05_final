@@ -51,7 +51,6 @@ class PostsViewsTest(TestCase):
 
     def setUp(self):
         """Создаем клиент гостя и зарегистрированного пользователя."""
-        self.guest = Client()
         self.auth_client = Client()
         self.auth_client.force_login(self.author)
         cache.clear()

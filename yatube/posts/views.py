@@ -44,9 +44,10 @@ def profile(request, username):
         User.objects.prefetch_related('posts', 'posts__group'),
         username=username
     )
+    user = request.user.is_authenticated
     post_list = author.posts.all()
     page_obj = get_page(request, post_list)
-    following = Post.objects.filter(author__following__user=request.user)
+    following = Post.objects.filter(author__following__user=user)
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -75,7 +76,10 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     """Добавление новой записи"""
-    form = PostForm(request.POST or None)
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None
+    )
     if not form.is_valid():
         return render(request, 'posts/create_post.html', {'form': form})
     new_post = form.save(commit=False)
@@ -134,11 +138,19 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
-    if author != request.user:
-        Follow.objects.create(
-            user=request.user,
-            author=author
-        )
+    user = request.user
+    already_follow = Follow.objects.filter(user=request.user,
+                                           author=author).exists()
+    try:
+        if author != user and not already_follow:
+            Follow.objects.create(
+                user=user,
+                author=author
+            )
+            return redirect(
+                'posts:follow_index'
+            )
+    except already_follow:
         return redirect(
             'posts:profile', username
         )
@@ -148,17 +160,18 @@ def profile_follow(request, username):
         'page_obj': page_obj,
         'author': author,
         'following': True
-     }
+    }
     return render(request, 'posts/profile.html', context)
 
 
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    if author != request.user:
-        Follow.objects.filter(user=request.user,
+    user = request.user
+    if author != user:
+        Follow.objects.filter(user=user,
                               author=author).delete()
-        return redirect('posts:profile', username)
+        return redirect('posts:index')
     return redirect(
         'posts:profile', username
     )

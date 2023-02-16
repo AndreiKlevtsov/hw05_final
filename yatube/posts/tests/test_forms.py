@@ -61,7 +61,7 @@ class PostsFormsTest(TestCase):
         form_data = {
             'text': 'Тестовый текст',
             'group': self.group.pk,
-            'image': image.name,
+            'image': image,
         }
         response = self.authorized_author.post(
             reverse('posts:post_create'),
@@ -70,13 +70,24 @@ class PostsFormsTest(TestCase):
         )
         post = Post.objects.get()
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertRedirects(response, reverse(
-            'posts:profile', args=(self.user_author,)), HTTPStatus.FOUND)
+        self.assertRedirects(
+            response, reverse(
+                'posts:profile', args=(self.user_author,)
+            ), HTTPStatus.FOUND
+        )
+        print(post.image.name)
+        self.assertTrue(
+            Post.objects.filter(
+                text='Тестовый текст',
+                group=self.group.pk,
+                image='posts/test_gif.gif'
+            )
+        )
         self.assertEqual(Post.objects.count(), 1)
         values = (
             (post.text, form_data['text']),
             (post.group.pk, form_data['group']),
-            (image.name, form_data['image']),
+            (image, form_data['image']),
             (post.author, self.user_author)
         )
         for param, expected in values:
@@ -85,15 +96,36 @@ class PostsFormsTest(TestCase):
 
     def test_cant_create_existing_slug(self):
         """Валидная форма редактирует пост."""
+        gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00'
+            b'\x01\x00\x00\x00\x00\x21\xf9\x04'
+            b'\x01\x0a\x00\x01\x00\x2c\x00\x00'
+            b'\x00\x00\x01\x00\x01\x00\x00\x02'
+            b'\x02\x4c\x01\x00\x3b'
+        )
+        image = SimpleUploadedFile(
+            name='test_gif.gif',
+            content=gif,
+            content_type='image/gif'
+        )
         post = Post.objects.create(
             author=self.user_author,
-            text='Тестовый пост'
+            text='Тестовый пост',
         )
         form_data = {
             'text': 'Edit text',
             'group': self.group_test.pk,
+            'image': image.name
         }
         response = self.authorized_author.post(
+            reverse(
+                'posts:post_edit',
+                kwargs={'post_id': post.pk}
+            ),
+            data=form_data,
+            follow=True
+        )
+        response_not_author = self.client.post(
             reverse(
                 'posts:post_edit',
                 kwargs={'post_id': post.pk}
@@ -105,11 +137,26 @@ class PostsFormsTest(TestCase):
         self.assertRedirects(response, reverse(
             'posts:post_detail', kwargs={'post_id': post_edited.pk}
         ))
+        print(post_edited.image)
+        # self.assertTrue(
+        #     Post.objects.filter(
+        #         text='Тестовый текст',
+        #         group=self.group.pk,
+        #         image='posts/test_gif.gif'
+        #     )
+        # )
+        self.assertRedirects(
+            response_not_author, reverse(
+                'users:login'
+            ) + f'?next=/posts/{post.id}/edit/'
+        )
         values = (
             (post_edited.text, form_data['text']),
             (post_edited.group.pk, form_data['group']),
+            # (post_edited.image, form_data['image']),
             (post_edited.author, self.user_author)
         )
+
         for param, expected in values:
             with self.subTest(param=param):
                 self.assertEqual(param, expected)
@@ -131,13 +178,13 @@ class PostsFormsTest(TestCase):
     #     new_post = Post.objects.get(pk=2)
     #     print(new_post.text, new_post.group, new_post.image)
 
-        # self.assertTrue(Post.objects.filter(**form_data).exists())
-        # self.assertEqual(Post.objects.count(), + 1)
-        # Проверяем, что создалась запись с нашим слагом
-        # self.assertTrue(
-        # Post.objects.filter(
-        #         text='testovyij-zagolovok',
-        #         group='Тестовый текст',
-        #         image='tasks/small.gif'
-        #     ).exists()
-        # )
+    # self.assertTrue(Post.objects.filter(**form_data).exists())
+    # self.assertEqual(Post.objects.count(), + 1)
+    # Проверяем, что создалась запись с нашим слагом
+    # self.assertTrue(
+    # Post.objects.filter(
+    #         text='testovyij-zagolovok',
+    #         group='Тестовый текст',
+    #         image='tasks/small.gif'
+    #     ).exists()
+    # )
