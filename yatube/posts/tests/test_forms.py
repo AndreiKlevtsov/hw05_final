@@ -6,7 +6,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.conf import settings
 
-from ..models import Group, Post
+from ..models import Group, Post, Comment
 
 import shutil
 import tempfile
@@ -75,7 +75,6 @@ class PostsFormsTest(TestCase):
                 'posts:profile', args=(self.user_author,)
             ), HTTPStatus.FOUND
         )
-        print(post.image.name)
         self.assertTrue(
             Post.objects.filter(
                 text='Тестовый текст',
@@ -137,14 +136,6 @@ class PostsFormsTest(TestCase):
         self.assertRedirects(response, reverse(
             'posts:post_detail', kwargs={'post_id': post_edited.pk}
         ))
-        print(post_edited.image)
-        # self.assertTrue(
-        #     Post.objects.filter(
-        #         text='Тестовый текст',
-        #         group=self.group.pk,
-        #         image='posts/test_gif.gif'
-        #     )
-        # )
         self.assertRedirects(
             response_not_author, reverse(
                 'users:login'
@@ -153,7 +144,7 @@ class PostsFormsTest(TestCase):
         values = (
             (post_edited.text, form_data['text']),
             (post_edited.group.pk, form_data['group']),
-            # (post_edited.image, form_data['image']),
+            ('test_gif.gif', form_data['image']),
             (post_edited.author, self.user_author)
         )
 
@@ -162,29 +153,25 @@ class PostsFormsTest(TestCase):
                 self.assertEqual(param, expected)
                 self.assertEqual(Post.objects.count(), 1)
 
-    # def test_form_create_post_with_img(self):
-    #     """Форма отправляет комментарий к записи"""
-    #
-    #     form_data = {
-    #         'text': 'Создание поста с картинкой',
-    #         'group': self.group.pk,
-    #         'image': img_post.image
-    #     }
-    #     self.authorized_author.post(
-    #         reverse('posts:post_create'),
-    #         data=form_data,
-    #         follow=True,
-    #     )
-    #     new_post = Post.objects.get(pk=2)
-    #     print(new_post.text, new_post.group, new_post.image)
+    def test_form_create_comment(self):
+        """Форма отправляет комментарий к записи"""
+        Post.objects.create(
+            text='Текст поста',
+            group=self.group,
+            author=self.user_author
+        )
+        form_data = {
+            'text': 'Текст комментария',
+        }
+        post = Post.objects.get()
+        self.authorized_author.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': post.pk}
+            ),
+            data=form_data,
+            follow=True
+        )
+        self.assertTrue(Comment.objects.filter(**form_data).exists())
+        self.assertEqual(Comment.objects.count(), 1)
 
-    # self.assertTrue(Post.objects.filter(**form_data).exists())
-    # self.assertEqual(Post.objects.count(), + 1)
-    # Проверяем, что создалась запись с нашим слагом
-    # self.assertTrue(
-    # Post.objects.filter(
-    #         text='testovyij-zagolovok',
-    #         group='Тестовый текст',
-    #         image='tasks/small.gif'
-    #     ).exists()
-    # )

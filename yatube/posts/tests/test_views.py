@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.conf import settings
 
 from ..forms import PostForm, forms
-from ..models import Group, Post, Comment
+from ..models import Group, Post, Comment, Follow
 
 import shutil
 import tempfile
@@ -37,6 +37,7 @@ class PostsViewsTest(TestCase):
             content_type='image/gif'
         )
         cls.author = User.objects.create(username='author')
+        cls.follower = User.objects.create(username='auth_follower')
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
@@ -53,6 +54,8 @@ class PostsViewsTest(TestCase):
         """Создаем клиент гостя и зарегистрированного пользователя."""
         self.auth_client = Client()
         self.auth_client.force_login(self.author)
+        self.auth_follower = Client()
+        self.auth_follower.force_login(self.follower)
         cache.clear()
 
     @classmethod
@@ -144,6 +147,19 @@ class PostsViewsTest(TestCase):
             data=form_data,
             follow=True,
         )
+        response_guest = self.client.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': self.post.pk}
+            ),
+            data=form_data,
+            follow=True
+        )
+        self.assertRedirects(
+            response_guest, reverse(
+                'users:login'
+            ) + f'?next=/posts/{self.post.id}/comment/'
+        )
         self.assertRedirects(response, reverse(
             'posts:post_detail', kwargs={'post_id': self.post.pk}
         ))
@@ -184,6 +200,7 @@ class PostsViewsTest(TestCase):
                 'posts/post_detail.html'
             ),
             reverse('posts:post_create'): 'posts/create_post.html',
+            reverse('posts:follow_index'): 'posts/follow.html',
             reverse('posts:post_edit',
                     kwargs={'post_id': self.post.pk}): (
                 'posts/create_post.html'
@@ -212,6 +229,39 @@ class PostsViewsTest(TestCase):
         response_clear = self.auth_client.get(reverse('posts:index'))
         cache_posts = response_clear.content.decode('utf-8')
         self.assertNotEqual(posts, cache_posts)
+
+    def test_follow(self):
+        """Авторизованный пользователь может подписываться на других
+        пользователей и удалять их из подписок. """
+        follow = Follow.objects.create(
+            user=self.follower,
+            author=self.author
+        )
+        self.assertEqual(Follow.objects.count(), 1)
+        follow.delete()
+        self.assertEqual(Follow.objects.count(), 0)
+        response = self.auth_follower.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.follower.username})
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        response_guest = self.client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.follower.username})
+        )
+        self.assertRedirects(
+            response_guest, reverse(
+                'users:login'
+            ) + f'?next=/profile/{self.follower.username}/follow/'
+        )
+
+    def test_follow_index(self):
+        """Новая запись пользователя появляется в ленте тех, кто на него
+        подписан и не появляется в ленте тех, кто не подписан. """
+
+
 
 
 class PaginatorTest(TestCase):

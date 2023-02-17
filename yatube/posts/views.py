@@ -59,9 +59,9 @@ def profile(request, username):
 def post_detail(request, post_id):
     """Детали поста"""
     post = get_object_or_404(
-        Post.objects.select_related('author', 'group', ), id=post_id
+        Post.objects.select_related('author', 'group',), id=post_id
     )
-    comments = post.comments.select_related('author', )
+    comments = post.comments.select_related('author',)
     form = CommentForm(
         request.POST or None
     )

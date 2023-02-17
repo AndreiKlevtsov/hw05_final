@@ -34,21 +34,65 @@ class PostsUrlsTest(TestCase):
         self.authorized_not_author.force_login(self.user_not_author)
         cache.clear()
 
-    def test_urls_response_guest(self):
+    def test_urls_response(self):
         """Проверяем статус страниц для пользователей."""
         url_list = [
-            ('', self.client, HTTPStatus.OK),
-            (f'/group/{self.group.slug}/', self.client, HTTPStatus.OK),
-            (f'/profile/{self.user.username}/', self.client, HTTPStatus.OK),
-            ('/create/', self.client, HTTPStatus.FOUND),
-            ('/create/', self.authorized_not_author, HTTPStatus.OK),
-            (f'/posts/{self.post.id}/', self.client, HTTPStatus.OK),
-            (f'/posts/{self.post.id}/edit/', self.client, HTTPStatus.FOUND),
-            (f'/posts/{self.post.id}/edit/', self.authorized_not_author,
-             HTTPStatus.FOUND),
-            (f'/posts/{self.post.id}/edit/', self.authorized_author,
-             HTTPStatus.OK),
-            ('f/unexisting_page/', self.client, HTTPStatus.NOT_FOUND),
+            (
+                '', self.client, HTTPStatus.OK
+            ),
+            (
+                f'/group/{self.group.slug}/', self.client, HTTPStatus.OK
+            ),
+            (
+                f'/profile/{self.user.username}/', self.client, HTTPStatus.OK
+            ),
+            (
+                '/create/', self.client, HTTPStatus.FOUND
+            ),
+            (
+                '/create/', self.authorized_not_author, HTTPStatus.OK
+            ),
+            (
+                f'/follow/', self.client, HTTPStatus.FOUND
+            ),
+            (
+                f'/follow/', self.authorized_author, HTTPStatus.OK
+            ),
+            (
+                f'/profile/{self.user.username}/follow/', self.client,
+                HTTPStatus.FOUND
+            ),
+            (
+                f'/profile/{self.user.username}/follow/',
+                self.authorized_author,
+                HTTPStatus.OK
+            ),
+            (
+                f'/profile/{self.user.username}/unfollow/', self.client,
+                HTTPStatus.FOUND
+            ),
+            (
+                f'/profile/{self.user.username}/unfollow/',
+                self.authorized_author,
+                HTTPStatus.FOUND
+            ),
+            (
+                f'/posts/{self.post.id}/', self.client, HTTPStatus.OK
+            ),
+            (
+                f'/posts/{self.post.id}/edit/', self.client, HTTPStatus.FOUND
+            ),
+            (
+                f'/posts/{self.post.id}/edit/', self.authorized_not_author,
+                HTTPStatus.FOUND
+            ),
+            (
+                f'/posts/{self.post.id}/edit/', self.authorized_author,
+                HTTPStatus.OK
+            ),
+            (
+                'f/unexisting_page/', self.client, HTTPStatus.NOT_FOUND
+            ),
         ]
 
         for url, client, status_code in url_list:
@@ -64,9 +108,9 @@ class PostsUrlsTest(TestCase):
             ('posts/profile.html', f'/profile/{self.user.username}/'),
             ('posts/post_detail.html', f'/posts/{self.post.id}/'),
             ('posts/create_post.html', '/create/'),
+            ('posts/follow.html', '/follow/'),
             ('posts/create_post.html', f'/posts/{self.post.id}/edit/'),
             ('core/404.html', '/not_found/'),
-            ('core/403.html', '/Custom CSRF/'),
         ]
         for template, url in templates_url_names:
             with self.subTest(url=url):
