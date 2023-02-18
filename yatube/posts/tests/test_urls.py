@@ -53,10 +53,10 @@ class PostsUrlsTest(TestCase):
                 '/create/', self.authorized_not_author, HTTPStatus.OK
             ),
             (
-                f'/follow/', self.client, HTTPStatus.FOUND
+                '/follow/', self.client, HTTPStatus.FOUND
             ),
             (
-                f'/follow/', self.authorized_author, HTTPStatus.OK
+                '/follow/', self.authorized_author, HTTPStatus.OK
             ),
             (
                 f'/profile/{self.user.username}/follow/', self.client,

@@ -1,7 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Custom 404{% endblock %}
 {% block content %}
-  <h1>Custom 404</h1>
-  <p>Страницы с адресом {{ path }} не существует</p>
-  <a href="{% url 'posts:index' %}">Идите на главную</a>
+  <div class="d-flex align-items-center justify-content-center vh-100">
+    <div class="text-center">
+      <h1 class="display-1 fw-bold">404</h1>
+      <p class="fs-3">
+        <span class="text-danger">
+          Страницы с адресом {{ path }} не существует.
+        </span>
+      </p>
+      <p class="lead">
+        Перейдите на главную страницу.
+      </p>
+      <a href="{% url 'posts:index' %}" class="btn btn-primary">
+        Перейти
+      </a>
+    </div>
+  </div>
 {% endblock %}

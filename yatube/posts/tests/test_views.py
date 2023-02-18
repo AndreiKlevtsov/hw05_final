@@ -1,17 +1,16 @@
+import shutil
+import tempfile
 from http import HTTPStatus
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.conf import settings
 
 from ..forms import PostForm, forms
-from ..models import Group, Post, Comment, Follow
-
-import shutil
-import tempfile
+from ..models import Comment, Follow, Group, Post
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -240,6 +239,7 @@ class PostsViewsTest(TestCase):
         self.assertEqual(Follow.objects.count(), 1)
         follow.delete()
         self.assertEqual(Follow.objects.count(), 0)
+
         response = self.auth_follower.get(
             reverse(
                 'posts:profile_follow',
@@ -260,8 +260,20 @@ class PostsViewsTest(TestCase):
     def test_follow_index(self):
         """Новая запись пользователя появляется в ленте тех, кто на него
         подписан и не появляется в ленте тех, кто не подписан. """
-
-
+        Follow.objects.create(
+            user=self.follower,
+            author=self.author
+        )
+        users = [
+            (self.client, '/follow/', False,),
+            (self.auth_follower, '/follow/', True,),
+        ]
+        for user, url, posts_exists in users:
+            with self.subTest(url=url):
+                response = user.get(url)
+                self.assertEqual(
+                    'Тестовая запись' in response.content.decode(),
+                    posts_exists)
 
 
 class PaginatorTest(TestCase):
