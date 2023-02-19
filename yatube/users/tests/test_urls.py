@@ -16,7 +16,6 @@ class UsersUrlsTest(TestCase):
 
     def setUp(self):
         """Создаем клиент гостя и зарегистрированного пользователя."""
-        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 

@@ -3,6 +3,7 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
+from django.urls import reverse
 
 from ..models import Group, Post
 
@@ -116,3 +117,31 @@ class PostsUrlsTest(TestCase):
             with self.subTest(url=url):
                 response = self.authorized_author.get(url)
                 self.assertTemplateUsed(response, template)
+
+    def test_edit_page_for_users(self):
+        """Доступность страницы редактирования для гостя, авторизованного
+        пользователя, автора поста. """
+        edit_page = ('posts:post_edit', (self.post.id,)),
+        for url, slug in edit_page:
+            reverse_name = reverse(url, args=slug)
+            with self.subTest(reverse_name=reverse_name):
+                response = self.client.get(reverse_name)
+                self.assertRedirects(
+                    response, reverse(
+                        'users:login'
+                    ) + f'?next=/posts/{self.post.id}/edit/'
+                )
+                response_author = self.authorized_author.get(reverse_name)
+                self.assertTemplateUsed(
+                    response_author,
+                    'posts/create_post.html'
+                )
+                response_not_author = self.authorized_not_author.get(
+                    reverse_name
+                )
+                self.assertRedirects(
+                    response_not_author, reverse(
+                        'posts:post_detail',
+                        kwargs={
+                            'post_id': self.post.id})
+                )
