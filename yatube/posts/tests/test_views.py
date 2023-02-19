@@ -245,7 +245,7 @@ class PostsViewsTest(TestCase):
                 'posts:profile_follow',
                 kwargs={'username': self.follower.username})
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
         response_guest = self.client.get(
             reverse(
                 'posts:profile_follow',
