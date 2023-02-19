@@ -43,10 +43,11 @@ def profile(request, username):
         User.objects.prefetch_related('posts', 'posts__group'),
         username=username
     )
-    user = request.user.is_authenticated
     post_list = author.posts.all()
     page_obj = get_page(request, post_list)
-    following = Post.objects.filter(author__following__user=user)
+    following = request.user.is_authenticated and Follow.objects.filter(
+        user=request.user, author=author
+    ).exists()
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -58,9 +59,9 @@ def profile(request, username):
 def post_detail(request, post_id):
     """Детали поста"""
     post = get_object_or_404(
-        Post.objects.select_related('author', 'group',), id=post_id
+        Post.objects.select_related('author', 'group', ), id=post_id
     )
-    comments = post.comments.select_related('author',)
+    comments = post.comments.select_related('author', )
     form = CommentForm(
         request.POST or None
     )
@@ -138,29 +139,17 @@ def follow_index(request):
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     user = request.user
-    already_follow = Follow.objects.filter(user=request.user,
-                                           author=author).exists()
-    try:
-        if author != user and not already_follow:
-            Follow.objects.create(
-                user=user,
-                author=author
-            )
-            return redirect(
-                'posts:follow_index'
-            )
-    except already_follow:
-        return redirect(
-            'posts:profile', username
+    if author != user:
+        Follow.objects.get_or_create(
+            user=user,
+            author=author
         )
-    post_list = author.posts.all()
-    page_obj = get_page(request, post_list)
-    context = {
-        'page_obj': page_obj,
-        'author': author,
-        'following': True
-    }
-    return render(request, 'posts/profile.html', context)
+        return redirect(
+            'posts:follow_index'
+        )
+    return redirect(
+                'posts:profile', username
+            )
 
 
 @login_required
