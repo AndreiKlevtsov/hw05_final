@@ -43,7 +43,7 @@ class PostsFormsTest(TestCase):
         super().tearDownClass()
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
-    def test_valid_from_create_post(self):
+    def test_valid_form_create_post(self):
         """Валидная форма создает новый пост и запись в базе данных."""
         gif = (
             b'\x47\x49\x46\x38\x39\x61\x01\x00'
@@ -92,8 +92,13 @@ class PostsFormsTest(TestCase):
             with self.subTest(param=param):
                 self.assertEqual(param, expected)
 
-    def test_cant_create_existing_slug(self):
+    def test_valid_form_edit_post(self):
         """Валидная форма редактирует пост."""
+        new_group = Group.objects.create(
+            title='Группа для редактирования',
+            slug='test-slug-edited',
+            description='Описание',
+        )
         gif = (
             b'\x47\x49\x46\x38\x39\x61\x01\x00'
             b'\x01\x00\x00\x00\x00\x21\xf9\x04'
@@ -112,7 +117,7 @@ class PostsFormsTest(TestCase):
         )
         form_data = {
             'text': 'Edit text',
-            'group': self.group_test.pk,
+            'group': new_group.pk,
             'image': image.name
         }
         response = self.authorized_author.post(
@@ -151,6 +156,18 @@ class PostsFormsTest(TestCase):
             with self.subTest(param=param):
                 self.assertEqual(param, expected)
                 self.assertEqual(Post.objects.count(), 1)
+                old_group_response = self.authorized_author.get(reverse(
+                    'posts:group_list',
+                    kwargs={'slug': self.group.slug})
+                )
+                self.assertEqual(
+                    old_group_response.context['page_obj'].paginator.count, 0)
+                new_group_response = self.authorized_author.get(reverse(
+                    'posts:group_list',
+                    kwargs={'slug': new_group.slug})
+                )
+                self.assertEqual(
+                    new_group_response.context['page_obj'].paginator.count, 1)
 
     def test_form_create_comment(self):
         """Форма отправляет комментарий к записи"""
@@ -163,6 +180,7 @@ class PostsFormsTest(TestCase):
             'text': 'Текст комментария',
         }
         post = Post.objects.get()
+
         self.authorized_author.post(
             reverse(
                 'posts:add_comment',
@@ -173,3 +191,6 @@ class PostsFormsTest(TestCase):
         )
         self.assertTrue(Comment.objects.filter(**form_data).exists())
         self.assertEqual(Comment.objects.count(), 1)
+        new_comment = Comment.objects.get()
+        self.assertEqual(new_comment.author, self.user_author)
+        self.assertEqual(new_comment.post, post)

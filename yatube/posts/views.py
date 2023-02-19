@@ -148,8 +148,8 @@ def profile_follow(request, username):
             'posts:follow_index'
         )
     return redirect(
-                'posts:profile', username
-            )
+        'posts:profile', username
+    )
 
 
 @login_required

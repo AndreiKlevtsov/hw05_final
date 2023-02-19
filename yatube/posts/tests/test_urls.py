@@ -66,7 +66,7 @@ class PostsUrlsTest(TestCase):
             (
                 f'/profile/{self.user.username}/follow/',
                 self.authorized_author,
-                HTTPStatus.OK
+                HTTPStatus.FOUND
             ),
             (
                 f'/profile/{self.user.username}/unfollow/', self.client,
